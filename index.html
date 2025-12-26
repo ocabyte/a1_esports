@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A1SPORTS | Pro Esports Player</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            black: '#050505',
+                            dark: '#0a0a0f',
+                            red: '#ff003c',
+                            blue: '#00f3ff',
+                            purple: '#bc13fe',
+                            gray: '#1f2937'
+                        }
+                    },
+                    fontFamily: {
+                        display: ['Teko', 'sans-serif'],
+                        mono: ['Share Tech Mono', 'monospace'],
+                    },
+                    backgroundImage: {
+                        'hex-pattern': "url('data:image/svg+xml,%3Csvg width=\"24\" height=\"40\" viewBox=\"0 0 24 40\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cpath d=\"M0 40c5.523 0 10-4.477 10-10V10c0-5.523 4.477-10 10-10H0v40z\" fill=\"%231f2937\" fill-opacity=\"0.05\" fill-rule=\"evenodd\"/%3E%3C/svg%3E')",
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* --- Core Visuals --- */
+        body {
+            background-color: #050505;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Scanline Overlay */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.6;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: #ff003c; border-radius: 0; }
+
+        /* HUD Borders (Angled Corners) */
+        .hud-border {
+            clip-path: polygon(
+                20px 0, 100% 0, 
+                100% calc(100% - 20px), calc(100% - 20px) 100%, 
+                0 100%, 0 20px
+            );
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            position: relative;
+        }
+        
+        .hud-border::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 20px; height: 2px;
+            background: #00f3ff;
+        }
+        .hud-border::after {
+            content: '';
+            position: absolute;
+            bottom: 0; right: 0; width: 20px; height: 2px;
+            background: #ff003c;
+        }
+
+        /* Glitch Text Effect */
+        .glitch {
+            position: relative;
+        }
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #050505;
+        }
+        .glitch::before {
+            left: 2px;
+            text-shadow: -1px 0 #ff003c;
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim 3s infinite linear alternate-reverse;
+        }
+        .glitch::after {
+            left: -2px;
+            text-shadow: -1px 0 #00f3ff;
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim 2.5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(10px, 9999px, 30px, 0); }
+            20% { clip: rect(80px, 9999px, 100px, 0); }
+            40% { clip: rect(10px, 9999px, 100px, 0); }
+            60% { clip: rect(5px, 9999px, 20px, 0); }
+            80% { clip: rect(60px, 9999px, 80px, 0); }
+            100% { clip: rect(40px, 9999px, 60px, 0); }
+        }
+
+        /* Neon Glows */
+        .text-glow-red { text-shadow: 0 0 10px rgba(255, 0, 60, 0.7); }
+        .text-glow-blue { text-shadow: 0 0 10px rgba(0, 243, 255, 0.7); }
+        
+        .box-glow-hover:hover {
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+
+        /* Animations */
+        .animate-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .animate-up.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+    </style>
+</head>
+<body class="font-sans antialiased">
+    
+    <!-- CRT Overlay -->
+    <div class="scanlines"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-cyber-dark/90 backdrop-blur-md border-b border-cyber-gray">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-2 group">
+                <div class="w-10 h-10 bg-cyber-red flex items-center justify-center transform skew-x-[-12deg] group-hover:bg-cyber-blue transition-colors duration-300">
+                    <span class="font-display font-bold text-2xl text-black skew-x-[12deg]">A1</span>
+                </div>
+                <span class="font-display font-bold text-2xl tracking-widest text-white group-hover:text-cyber-blue transition-colors">SPORTS</span>
+            </a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center gap-8 font-mono text-sm tracking-widest text-gray-400">
+                <a href="#profile" class="hover:text-cyber-blue hover:text-glow-blue transition-all">PROFILE</a>
+                <a href="#stats" class="hover:text-cyber-blue hover:text-glow-blue transition-all">STATS</a>
+                <a href="#highlights" class="hover:text-cyber-blue hover:text-glow-blue transition-all">CLIPS</a>
+                <a href="#contact" class="px-6 py-2 border border-cyber-red text-cyber-red hover:bg-cyber-red hover:text-black transition-all skew-x-[-12deg]">
+                    <span class="skew-x-[12deg] inline-block font-bold">CONTACT</span>
+                </a>
+            </div>
+            
+            <!-- Mobile Menu Btn -->
+            <button class="md:hidden text-white"><i data-lucide="menu" class="w-8 h-8"></i></button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative h-screen flex items-center justify-center overflow-hidden">
+        <!-- Abstract Background -->
+        <div class="absolute inset-0 bg-hex-pattern opacity-20 z-0"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-cyber-black via-transparent to-transparent z-10"></div>
+        
+        <!-- Animated Blob -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyber-red/10 rounded-full blur-[120px] animate-pulse"></div>
+
+        <div class="relative z-20 text-center px-4 max-w-5xl">
+            <div class="mb-4 flex items-center justify-center gap-3 animate-up">
+                <span class="h-[1px] w-12 bg-cyber-blue"></span>
+                <span class="font-mono text-cyber-blue tracking-[0.3em] text-sm">PRO ESPORTS PLAYER</span>
+                <span class="h-[1px] w-12 bg-cyber-blue"></span>
+            </div>
+
+            <h1 class="glitch text-8xl md:text-[10rem] font-display font-bold leading-none mb-6 tracking-tighter" data-text="A1SPORTS">
+                A1SPORTS
+            </h1>
+            
+            <p class="font-mono text-lg md:text-2xl text-gray-400 mb-10 max-w-2xl mx-auto animate-up delay-100">
+                PRECISION. SPEED. VICTORY. <br>
+                <span class="text-cyber-red">ALEX RAHMAN</span> // BANGLADESH
+            </p>
+
+            <div class="flex flex-col md:flex-row gap-6 justify-center items-center animate-up delay-200">
+                <a href="#highlights" class="relative px-8 py-4 bg-cyber-red text-black font-display font-bold text-xl tracking-wider hover:bg-white transition-all skew-x-[-12deg] group">
+                    <span class="skew-x-[12deg] inline-block flex items-center gap-2">
+                        <i data-lucide="play" class="w-5 h-5 fill-current"></i> WATCH HIGHLIGHTS
+                    </span>
+                </a>
+                <a href="https://discord.com" class="relative px-8 py-4 border border-cyber-blue text-cyber-blue font-display font-bold text-xl tracking-wider hover:bg-cyber-blue/10 transition-all skew-x-[-12deg]">
+                    <span class="skew-x-[12deg] inline-block">JOIN DISCORD</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 text-gray-500 animate-bounce">
+            <span class="font-mono text-xs mb-2 block text-center">SCROLL</span>
+            <i data-lucide="chevrons-down" class="w-6 h-6 mx-auto text-cyber-red"></i>
+        </div>
+    </section>
+
+    <!-- Profile & Bio -->
+    <section id="profile" class="py-24 bg-cyber-dark relative">
+        <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
+            
+            <!-- Image Frame -->
+            <div class="relative animate-up">
+                <!-- Decorative Elements -->
+                <div class="absolute -top-4 -left-4 w-24 h-24 border-t-2 border-l-2 border-cyber-blue"></div>
+                <div class="absolute -bottom-4 -right-4 w-24 h-24 border-b-2 border-r-2 border-cyber-red"></div>
+                
+                <div class="hud-border bg-cyber-black p-2">
+                    <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop" alt="A1sports Profile" class="w-full h-auto grayscale hover:grayscale-0 transition-all duration-500 object-cover opacity-90 hover:opacity-100">
+                    
+                    <!-- Overlay Stats -->
+                    <div class="absolute bottom-4 left-4 bg-black/80 backdrop-blur px-3 py-1 border-l-2 border-cyber-red">
+                        <span class="font-mono text-xs text-cyber-red">ROLE</span>
+                        <div class="font-display text-xl">ENTRY FRAGGER</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bio Text -->
+            <div class="animate-up delay-100">
+                <h2 class="text-5xl font-display font-bold mb-6 text-white">
+                    BUILT TO <span class="text-cyber-red text-glow-red">DOMINATE</span>
+                </h2>
+                <div class="font-mono text-gray-400 space-y-6 leading-relaxed">
+                    <p>
+                        I’m <span class="text-white">A1sports</span> (Alex Rahman), a competitive esports player known for aggressive playmaking and clutch performances. I compete at the highest level in Valorant and CS2.
+                    </p>
+                    <p>
+                        My philosophy is simple: Outthink, Outaim, Outplay. When I'm not scrimming with the team, I stream my journey to help the next generation of players improve their game sense.
+                    </p>
+                </div>
+
+                <div class="mt-8 grid grid-cols-2 gap-4">
+                    <div class="bg-cyber-gray/30 p-4 border-l-2 border-cyber-blue">
+                        <div class="text-xs font-mono text-cyber-blue mb-1">MAIN GAME</div>
+                        <div class="font-display text-2xl">VALORANT</div>
+                    </div>
+                    <div class="bg-cyber-gray/30 p-4 border-l-2 border-cyber-red">
+                        <div class="text-xs font-mono text-cyber-red mb-1">RANK</div>
+                        <div class="font-display text-2xl">RADIANT</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Stats HUD -->
+    <section id="stats" class="py-24 bg-cyber-black relative overflow-hidden">
+        <!-- Background Grid Line Animation -->
+        <div class="absolute top-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyber-red to-transparent animate-pulse"></div>
+
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex items-end justify-between mb-12 border-b border-gray-800 pb-4">
+                <h2 class="text-4xl md:text-6xl font-display font-bold">COMBAT <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyber-blue to-purple-500">STATS</span></h2>
+                <span class="font-mono text-xs text-gray-500 tracking-widest hidden md:block">LIVE TRACKER_V2.0</span>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <!-- Stat Card 1 -->
+                <div class="bg-cyber-dark border border-gray-800 p-6 text-center group hover:border-cyber-red transition-colors duration-300">
+                    <div class="font-mono text-sm text-gray-500 mb-2 group-hover:text-cyber-red">K/D RATIO</div>
+                    <div class="text-5xl font-display font-bold text-white counter" data-target="1.45">0</div>
+                </div>
+
+                <!-- Stat Card 2 -->
+                <div class="bg-cyber-dark border border-gray-800 p-6 text-center group hover:border-cyber-blue transition-colors duration-300">
+                    <div class="font-mono text-sm text-gray-500 mb-2 group-hover:text-cyber-blue">WIN RATE</div>
+                    <div class="text-5xl font-display font-bold text-white"><span class="counter" data-target="62">0</span>%</div>
+                </div>
+
+                <!-- Stat Card 3 -->
+                <div class="bg-cyber-dark border border-gray-800 p-6 text-center group hover:border-purple-500 transition-colors duration-300">
+                    <div class="font-mono text-sm text-gray-500 mb-2 group-hover:text-purple-500">MVP AWARDS</div>
+                    <div class="text-5xl font-display font-bold text-white counter" data-target="12">0</div>
+                </div>
+
+                <!-- Stat Card 4 -->
+                <div class="bg-cyber-dark border border-gray-800 p-6 text-center group hover:border-white transition-colors duration-300">
+                    <div class="font-mono text-sm text-gray-500 mb-2 group-hover:text-white">TOURNAMENTS</div>
+                    <div class="text-5xl font-display font-bold text-white counter" data-target="45">0</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Highlights & Clips -->
+    <section id="highlights" class="py-24 bg-cyber-dark bg-hex-pattern">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-4xl font-display font-bold mb-12 text-center">FEATURED <span class="text-cyber-red">HIGHLIGHTS</span></h2>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Clip 1 -->
+                <div class="group hud-border bg-black aspect-video relative overflow-hidden cursor-pointer">
+                    <div class="absolute inset-0 bg-cyber-red/20 group-hover:bg-transparent transition-colors z-10"></div>
+                    <img src="https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=2165&auto=format&fit=crop" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 opacity-60 group-hover:opacity-100">
+                    <div class="absolute inset-0 flex items-center justify-center z-20">
+                        <div class="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center group-hover:bg-cyber-red group-hover:border-cyber-red transition-all">
+                            <i data-lucide="play" class="fill-white w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black to-transparent z-20">
+                        <div class="text-xs font-mono text-cyber-red">ACE CLUTCH</div>
+                        <div class="font-display text-xl">NATIONAL FINALS MAP 3</div>
+                    </div>
+                </div>
+
+                <!-- Clip 2 -->
+                <div class="group hud-border bg-black aspect-video relative overflow-hidden cursor-pointer">
+                    <div class="absolute inset-0 bg-cyber-blue/20 group-hover:bg-transparent transition-colors z-10"></div>
+                    <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=2071&auto=format&fit=crop" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 opacity-60 group-hover:opacity-100">
+                    <div class="absolute inset-0 flex items-center justify-center z-20">
+                        <div class="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center group-hover:bg-cyber-blue group-hover:border-cyber-blue transition-all">
+                            <i data-lucide="play" class="fill-white w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black to-transparent z-20">
+                        <div class="text-xs font-mono text-cyber-blue">SNIPER COMPILATION</div>
+                        <div class="font-display text-xl">OPERATOR GOD MODE</div>
+                    </div>
+                </div>
+
+                <!-- Clip 3 -->
+                <div class="group hud-border bg-black aspect-video relative overflow-hidden cursor-pointer">
+                    <div class="absolute inset-0 bg-purple-500/20 group-hover:bg-transparent transition-colors z-10"></div>
+                    <img src="https://images.unsplash.com/photo-1542751110-97427bbecf20?q=80&w=2084&auto=format&fit=crop" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 opacity-60 group-hover:opacity-100">
+                    <div class="absolute inset-0 flex items-center justify-center z-20">
+                        <div class="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center group-hover:bg-purple-600 group-hover:border-purple-600 transition-all">
+                            <i data-lucide="play" class="fill-white w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black to-transparent z-20">
+                        <div class="text-xs font-mono text-purple-500">STREAM MOMENTS</div>
+                        <div class="font-display text-xl">FUNNY MOMENTS #42</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Achievements -->
+    <section class="py-16 bg-cyber-black border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-wrap justify-center gap-8 md:gap-16">
+                <div class="flex items-center gap-4 opacity-50 hover:opacity-100 transition-opacity cursor-default">
+                    <i data-lucide="trophy" class="w-8 h-8 text-yellow-500"></i>
+                    <div>
+                        <div class="font-display text-xl">1ST PLACE</div>
+                        <div class="font-mono text-xs text-gray-400">NATIONAL VALORANT CHAMPIONSHIP</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 opacity-50 hover:opacity-100 transition-opacity cursor-default">
+                    <i data-lucide="medal" class="w-8 h-8 text-gray-400"></i>
+                    <div>
+                        <div class="font-display text-xl">FINALIST</div>
+                        <div class="font-mono text-xs text-gray-400">CS2 REGIONAL LEAGUE</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 opacity-50 hover:opacity-100 transition-opacity cursor-default">
+                    <i data-lucide="star" class="w-8 h-8 text-cyber-red"></i>
+                    <div>
+                        <div class="font-display text-xl">MVP</div>
+                        <div class="font-mono text-xs text-gray-400">PRO INVITATIONAL CUP</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sponsors -->
+    <section class="py-12 bg-white/5 border-y border-gray-800 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <p class="font-mono text-xs text-gray-500 mb-8 tracking-widest">POWERED BY</p>
+            <div class="flex flex-wrap justify-center items-center gap-12 grayscale hover:grayscale-0 transition-all duration-500">
+                <!-- Logos (Text placeholders for demo) -->
+                 <div class="text-3xl font-display font-bold text-white opacity-60 hover:opacity-100">OCABYTE</div>
+                <div class="text-3xl font-display font-bold text-white opacity-60 hover:opacity-100">HYPER<span class="text-red-600">X</span></div>
+                <div class="text-3xl font-display font-bold text-white opacity-60 hover:opacity-100">LOGITECH <span class="text-blue-400">G</span></div>
+                <div class="text-3xl font-display font-bold text-white opacity-60 hover:opacity-100"><span class="text-red-500">RED BULL</span></div>
+                <div class="text-3xl font-display font-bold text-white opacity-60 hover:opacity-100">NVIDIA</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact & Socials -->
+    <section id="contact" class="py-24 bg-cyber-black relative text-center">
+        <div class="max-w-3xl mx-auto px-6">
+            <h2 class="text-5xl md:text-7xl font-display font-bold mb-8 text-white">
+                BUILD A <span class="text-cyber-blue text-glow-blue">LEGACY</span>
+            </h2>
+            <p class="font-mono text-gray-400 mb-12">
+                For business inquiries, sponsorships, or collaborations.
+            </p>
+
+            <a href="mailto:contact@a1sports.gg" class="inline-block px-10 py-4 bg-cyber-blue text-black font-display font-bold text-2xl skew-x-[-12deg] hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] transition-all">
+                <span class="skew-x-[12deg] inline-block">CONTACT@A1SPORTS.GG</span>
+            </a>
+
+            <div class="mt-16 flex justify-center gap-8">
+                <a href="https://twitch.tv" class="group">
+                    <div class="w-14 h-14 bg-gray-900 flex items-center justify-center skew-x-[-12deg] border border-gray-700 group-hover:bg-[#6441a5] group-hover:border-[#6441a5] transition-all">
+                        <i data-lucide="twitch" class="w-6 h-6 text-gray-400 skew-x-[12deg] group-hover:text-white"></i>
+                    </div>
+                </a>
+                <a href="https://youtube.com" class="group">
+                    <div class="w-14 h-14 bg-gray-900 flex items-center justify-center skew-x-[-12deg] border border-gray-700 group-hover:bg-[#FF0000] group-hover:border-[#FF0000] transition-all">
+                        <i data-lucide="youtube" class="w-6 h-6 text-gray-400 skew-x-[12deg] group-hover:text-white"></i>
+                    </div>
+                </a>
+                <a href="https://discord.com" class="group">
+                    <div class="w-14 h-14 bg-gray-900 flex items-center justify-center skew-x-[-12deg] border border-gray-700 group-hover:bg-[#1DA1F2] group-hover:border-[#1DA1F2] transition-all">
+                        <i data-lucide="twitter" class="w-6 h-6 text-gray-400 skew-x-[12deg] group-hover:text-white"></i>
+                    </div>
+                </a>
+                <a href="https://instagram.com" class="group">
+                    <div class="w-14 h-14 bg-gray-900 flex items-center justify-center skew-x-[-12deg] border border-gray-700 group-hover:bg-[#E1306C] group-hover:border-[#E1306C] transition-all">
+                        <i data-lucide="instagram" class="w-6 h-6 text-gray-400 skew-x-[12deg] group-hover:text-white"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <footer class="mt-24 border-t border-gray-900 py-8">
+            <p class="font-mono text-xs text-gray-600">© 2024 A1SPORTS. ALL RIGHTS RESERVED.</p>
+            <p class="font-mono text-xs text-gray-600">Built By <a href="https://www.facebook.com/profile.php?id=100063808086007"><u>OcaByte</u>. DESIGNED FOR VICTORY.</a></p>
+        </footer>
+    </section>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // 1. Counter Animation for Stats
+        const statsSection = document.getElementById('stats');
+        const counters = document.querySelectorAll('.counter');
+        let started = false;
+
+        const startCounters = () => {
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                const duration = 2000; // ms
+                const increment = target / (duration / 16); 
+
+                let current = 0;
+                const updateCounter = () => {
+                    current += increment;
+                    if (current < target) {
+                        // Check if it's a decimal number (like K/D)
+                        if (target % 1 !== 0) {
+                            counter.innerText = current.toFixed(2);
+                        } else {
+                            counter.innerText = Math.ceil(current);
+                        }
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.innerText = target;
+                    }
+                };
+                updateCounter();
+            });
+        };
+
+        // 2. Scroll Observer (Fade Up & Start Counters)
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    
+                    // Specific check for Stats section
+                    if (entry.target.id === 'stats' && !started) {
+                        startCounters();
+                        started = true;
+                    }
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.animate-up').forEach(el => observer.observe(el));
+        observer.observe(statsSection);
+
+        // 3. Parallax Effect on Hero
+        const hero = document.querySelector('section');
+        document.addEventListener('mousemove', (e) => {
+            const x = (window.innerWidth - e.pageX * 2) / 100;
+            const y = (window.innerHeight - e.pageY * 2) / 100;
+            
+            // Subtle movement on background elements
+            hero.style.transform = `translateX(${x}px) translateY(${y}px)`;
+        });
+
+    </script>
+</body>
+</html>
